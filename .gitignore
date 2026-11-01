@@ -1,0 +1,16 @@
+# Data and generated artifacts (data comes from Kaggle; never commit it)
+data/
+.cache/
+runs/*/*.pt
+logs/
+submissions/*.logits.pt
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store

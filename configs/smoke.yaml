@@ -1,0 +1,13 @@
+# Tiny config for tests and quick pipeline checks (runs on CPU in seconds).
+run_name: smoke
+data:
+  val_size: 20
+  num_workers: 0
+model:
+  channels: [8, 16]
+  blocks: [1, 1]
+train:
+  epochs: 1
+  batch_size: 8
+  max_steps_per_epoch: 3
+  amp: false

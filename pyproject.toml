@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cifar-resnet"
+version = "0.1.0"
+description = "Parameter-efficient ResNets (<5M params) for CIFAR-10, NYU Tandon Deep Learning Project 1."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "torch>=2.2",
+    "torchvision>=0.17",
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "pillow>=10.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+notebook = ["matplotlib>=3.7", "jupyter>=1.0", "torchsummary>=1.5"]
+dev = ["pytest>=8.0", "ruff>=0.5"]
+
+[project.scripts]
+cifar-train = "cifar_resnet.train:main"
+cifar-predict = "cifar_resnet.predict:main"
+cifar-params = "cifar_resnet.params:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+ignore = ["B905"]

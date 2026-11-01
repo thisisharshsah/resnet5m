@@ -1,0 +1,5 @@
+# Narrower and deeper: 3 stages with 3 blocks each.
+run_name: deep3
+model:
+  channels: [64, 128, 256]
+  blocks: [3, 3, 3]

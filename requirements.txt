@@ -1,0 +1,10 @@
+# Mirrors pyproject.toml for environments where `pip install -e .` is not convenient.
+torch>=2.2
+torchvision>=0.17
+numpy>=1.24
+pandas>=2.0
+pillow>=10.0
+pyyaml>=6.0
+tqdm>=4.66
+matplotlib>=3.7
+torchsummary>=1.5

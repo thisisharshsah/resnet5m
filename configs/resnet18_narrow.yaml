@@ -1,0 +1,6 @@
+# Baseline: ResNet-18 layout (4 stages x 2 basic blocks) with channel widths
+# scaled down to fit under the 5M budget.
+run_name: resnet18_narrow
+model:
+  channels: [42, 84, 168, 336]
+  blocks: [2, 2, 2, 2]
