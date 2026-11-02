@@ -1,5 +1,3 @@
-# Baseline recipe: wide and shallow, 3 stages (32x32 -> 16x16 -> 8x8) of wide basic blocks,
-# in the spirit of Wide ResNets (Zagoruyko & Komodakis, 2016). Plain SGD, no distillation.
 run_name: wide3
 model:
   channels: [80, 160, 320]

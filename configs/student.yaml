@@ -1,7 +1,3 @@
-# Main submission candidate: wide3 widened to use the budget (4.90M params), trained with
-# SAM, CutMix and knowledge distillation from configs/teacher.yaml over a longer schedule.
-#   1. cifar-train --config configs/teacher.yaml
-#   2. cifar-train --config configs/student.yaml
 run_name: student
 model:
   channels: [96, 192, 320]

@@ -1,12 +1,3 @@
-"""Configurable ResNet for 32x32 inputs.
-
-Each residual block computes ``ReLU(S(x) + F(x))`` where ``F`` is
-conv -> BN -> ReLU -> conv -> BN and ``S`` is the identity, or a KxK conv + BN
-projection when the shape changes (He et al., 2016). Stage widths (C_i), filter
-size (F_i), shortcut kernel size (K_i) and the final pool size (P) are all
-configurable so the architecture can be searched under the 5M parameter budget.
-"""
-
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -17,8 +8,6 @@ from torch import nn
 
 
 class SqueezeExcite(nn.Module):
-    """Channel attention (Hu et al., 2018). Cheap in parameters, optional."""
-
     def __init__(self, channels: int, ratio: float) -> None:
         super().__init__()
         hidden = max(8, int(channels * ratio))
@@ -129,8 +118,6 @@ class ResNet(nn.Module):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
         if zero_init_residual:
-            # Each block starts as (almost) an identity map, which stabilizes early training
-            # (Goyal et al., 2017).
             for m in self.modules():
                 if isinstance(m, BasicBlock):
                     nn.init.zeros_(m.bn2.weight)

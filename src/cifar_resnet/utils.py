@@ -1,5 +1,3 @@
-"""Small shared helpers: seeding, device selection, logging, mixed precision."""
-
 from __future__ import annotations
 
 import contextlib
@@ -22,7 +20,6 @@ def seed_everything(seed: int) -> None:
 
 
 def get_device(preferred: str | None = None) -> torch.device:
-    """CUDA if available, then Apple MPS, then CPU. ``CIFAR_DEVICE`` env var overrides."""
     name = preferred or os.environ.get("CIFAR_DEVICE")
     if name:
         return torch.device(name)
@@ -49,7 +46,6 @@ def setup_logging(log_file: str | Path | None = None) -> None:
 
 
 def autocast_context(device: torch.device, enabled: bool):
-    """bf16 autocast on GPUs that support it, fp16 otherwise; no-op off CUDA."""
     if not enabled or device.type != "cuda":
         return contextlib.nullcontext()
     dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16

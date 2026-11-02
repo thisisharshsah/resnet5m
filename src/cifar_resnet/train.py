@@ -1,15 +1,3 @@
-"""Train a ResNet on CIFAR-10.
-
-Usage::
-
-    cifar-train --config configs/student.yaml
-    cifar-train --config configs/student.yaml data.val_size=0 run_name=student_full
-    cifar-train --resume runs/student/last.pt
-
-Each run writes to ``runs/<run_name>/``: ``config.yaml``, ``train.log``,
-``metrics.csv`` (one row per epoch), ``best.pt`` / ``last.pt`` and ``summary.json``.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -27,7 +15,7 @@ from cifar_resnet.config import Config, apply_overrides, from_dict, load_config
 from cifar_resnet.data import build_train_val_loaders
 from cifar_resnet.ema import ModelEMA
 from cifar_resnet.engine import build_optimizer, build_scheduler, evaluate, train_one_epoch
-from cifar_resnet.models import build_model, count_parameters
+from cifar_resnet.models import LogitEnsemble, build_model, count_parameters
 from cifar_resnet.rules import COMPETITION_MAX_PARAMS, check_teacher
 from cifar_resnet.sam import SAM
 from cifar_resnet.utils import get_device, needs_grad_scaler, seed_everything, setup_logging
@@ -65,7 +53,6 @@ def _append_metrics(path: Path, row: dict) -> None:
 
 
 def train(cfg: Config, resume: str | Path | None = None) -> dict:
-    """Run a full training job and return its summary (also written to summary.json)."""
     run_dir = cfg.run_dir
     run_dir.mkdir(parents=True, exist_ok=True)
     setup_logging(run_dir / "train.log")
@@ -92,15 +79,21 @@ def train(cfg: Config, resume: str | Path | None = None) -> dict:
 
     teacher = None
     if cfg.distill.teacher:
-        teacher_ckpt = read_checkpoint(cfg.distill.teacher)
-        check_teacher(teacher_ckpt, cfg.distill.teacher, cfg)
-        teacher, _, _ = load_model(cfg.distill.teacher, device, enforce_budget=False)
-        if channels_last:
-            teacher = teacher.to(memory_format=torch.channels_last)
+        paths = (
+            [cfg.distill.teacher] if isinstance(cfg.distill.teacher, str) else cfg.distill.teacher
+        )
+        members = []
+        for path in paths:
+            check_teacher(read_checkpoint(path), path, cfg)
+            member, _, _ = load_model(path, device, enforce_budget=False)
+            if channels_last:
+                member = member.to(memory_format=torch.channels_last)
+            members.append(member)
+            log.info("Teacher %s: %s params", path, f"{count_parameters(member):,}")
+        teacher = members[0] if len(members) == 1 else LogitEnsemble(members)
         log.info(
-            "Distilling from %s (%s params, alpha %.2f, T %.1f)",
-            cfg.distill.teacher,
-            f"{count_parameters(teacher):,}",
+            "Distilling from %d teacher(s) (alpha %.2f, T %.1f)",
+            len(members),
             cfg.distill.alpha,
             cfg.distill.temperature,
         )
@@ -221,7 +214,6 @@ def train(cfg: Config, resume: str | Path | None = None) -> dict:
             run_dir / "last.pt",
         )
 
-    # Without a validation split (final run on all 50k images), export the EMA weights.
     final_module = ema.module if ema is not None else model
     save_weights(run_dir / "final.pt", final_module, cfg, epoch=cfg.train.epochs)
     if val_loader is None:

@@ -1,4 +1,3 @@
-# Tiny config for tests and quick pipeline checks (runs on CPU in seconds).
 run_name: smoke
 data:
   val_size: 20

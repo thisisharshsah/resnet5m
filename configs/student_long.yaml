@@ -1,0 +1,19 @@
+run_name: student_long
+model:
+  channels: [96, 192, 320]
+  blocks: [2, 2, 2]
+augment:
+  mix: cutmix
+  mix_prob: 0.5
+optim:
+  label_smoothing: 0.0
+  sam_rho: 0.05
+train:
+  epochs: 800
+distill:
+  teacher:
+    - runs/teacher/best.pt
+    - runs/teacher_s1/best.pt
+    - runs/teacher_s2/best.pt
+  alpha: 0.9
+  temperature: 4.0

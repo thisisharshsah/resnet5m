@@ -1,5 +1,3 @@
-"""The competition rules are enforced in code; these tests keep it that way."""
-
 import pytest
 import torch
 
@@ -44,11 +42,15 @@ def test_predict_refuses_weights_not_trained_by_this_code(fake_data_root, tmp_pa
 
 def test_teacher_must_not_have_seen_the_validation_split(fake_data_root, tmp_path):
     student = _smoke_cfg(fake_data_root, tmp_path, "data.val_size=20")
+    teacher_cfg = _smoke_cfg(fake_data_root, tmp_path, "data.val_size=20", "data.split_seed=7")
+    ckpt = {"origin": "cifar_resnet.train", "config": teacher_cfg.to_dict()}
+    with pytest.raises(ValueError, match="validation split"):
+        check_teacher(ckpt, "teacher.pt", student)
     teacher_cfg = _smoke_cfg(fake_data_root, tmp_path, "data.val_size=0")
     ckpt = {"origin": "cifar_resnet.train", "config": teacher_cfg.to_dict()}
     with pytest.raises(ValueError, match="validation split"):
         check_teacher(ckpt, "teacher.pt", student)
-    # A full-data student (no validation split) may use it.
+
     full_student = from_dict(
         {**student.to_dict(), "data": {**student.to_dict()["data"], "val_size": 0}}
     )
@@ -68,9 +70,10 @@ def test_training_never_reads_the_test_split(fake_data_root, tmp_path, monkeypat
     assert seen and set(seen) == {"train"}
 
 
-def test_sam_and_distillation_train_end_to_end(fake_data_root, tmp_path):
-    teacher_cfg = _smoke_cfg(fake_data_root, tmp_path, "run_name=teacher")
-    train(teacher_cfg)
+def test_sam_and_ensemble_distillation_train_end_to_end(fake_data_root, tmp_path):
+    for name, seed in (("teacher", 0), ("teacher_s1", 1)):
+        train(_smoke_cfg(fake_data_root, tmp_path, f"run_name={name}", f"train.seed={seed}"))
+    teachers = [str(tmp_path / "runs" / n / "best.pt") for n in ("teacher", "teacher_s1")]
     student_cfg = _smoke_cfg(
         fake_data_root,
         tmp_path,
@@ -78,7 +81,7 @@ def test_sam_and_distillation_train_end_to_end(fake_data_root, tmp_path):
         "optim.sam_rho=0.05",
         "augment.mix=cutmix",
         "augment.mix_prob=1.0",
-        f"distill.teacher={tmp_path / 'runs' / 'teacher' / 'best.pt'}",
+        f"distill.teacher={teachers}",
     )
     summary = train(student_cfg)
     assert summary["params"] <= COMPETITION_MAX_PARAMS

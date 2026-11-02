@@ -1,5 +1,3 @@
-"""Exponential moving average of model weights (Polyak averaging)."""
-
 from __future__ import annotations
 
 import copy
@@ -19,7 +17,7 @@ class ModelEMA:
     @torch.no_grad()
     def update(self, model: nn.Module) -> None:
         self.updates += 1
-        # Warm up the decay so early, noisy weights are forgotten quickly.
+
         d = min(self.decay, (1 + self.updates) / (10 + self.updates))
         model_state = model.state_dict()
         for name, ema_value in self.module.state_dict().items():

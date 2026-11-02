@@ -12,8 +12,8 @@ def _model():
 def test_sam_restores_weights_before_the_base_step():
     model = _model()
     x, y = torch.randn(8, 3, 8, 8), torch.randint(0, 2, (8,))
-    model(x)  # materialize the lazy layer
-    base = torch.optim.SGD(model.parameters(), lr=0.0)  # lr 0: the step itself changes nothing
+    model(x)
+    base = torch.optim.SGD(model.parameters(), lr=0.0)
     sam = SAM(base, rho=0.5)
     before = [p.detach().clone() for p in model.parameters()]
 

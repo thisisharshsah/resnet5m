@@ -1,11 +1,3 @@
-"""Print the architecture and trainable-parameter count for one or more configs.
-
-Usage::
-
-    cifar-params configs/*.yaml
-    cifar-params configs/wrn16_5.yaml --summary
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -18,7 +10,6 @@ from cifar_resnet.rules import COMPETITION_MAX_PARAMS
 
 
 def layer_table(model: nn.Module) -> str:
-    """Per-stage parameter breakdown, readable in a terminal or a notebook."""
     rows = [("stem", count_parameters(model.stem))]
     for i, stage in enumerate(model.stages):
         rows.append((f"stage{i + 1} ({len(stage)} blocks)", count_parameters(stage)))

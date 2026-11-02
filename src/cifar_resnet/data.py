@@ -1,17 +1,3 @@
-"""Data loading for the Kaggle competition layout.
-
-Expected layout (exactly what Kaggle's "Download All" zip contains)::
-
-    <root>/
-        train_labels.csv    # id, filename, label
-        test.csv            # id, filename
-        sample_submission.csv
-        train_images/*.png
-        test_images/*.png
-
-PNGs are decoded once and cached as uint8 arrays, so later runs start in seconds.
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -43,7 +29,7 @@ CLASSES = (
     "ship",
     "truck",
 )
-# Standard CIFAR-10 training-set statistics.
+
 MEAN = (0.4914, 0.4822, 0.4465)
 STD = (0.2470, 0.2435, 0.2616)
 
@@ -55,13 +41,12 @@ _SPLITS = {
 
 @dataclass
 class Split:
-    images: np.ndarray  # (N, 32, 32, 3) uint8
-    ids: np.ndarray  # (N,) int64, as given in the CSV
-    labels: np.ndarray | None  # (N,) int64, None for the test split
+    images: np.ndarray
+    ids: np.ndarray
+    labels: np.ndarray | None
 
 
 def find_data_root(root: str | Path) -> Path:
-    """Return the folder containing ``train_labels.csv``, searching one level down."""
     root = Path(root).expanduser()
     if (root / "train_labels.csv").exists():
         return root
@@ -90,7 +75,6 @@ def _read_png(path: Path) -> np.ndarray:
 
 
 def load_split(root: str | Path, split: str, cache_dir: str | Path | None = None) -> Split:
-    """Load ``train`` or ``test`` images as uint8 arrays, using an on-disk cache."""
     if split not in _SPLITS:
         raise ValueError(f"split must be one of {list(_SPLITS)}")
     root = find_data_root(root)
@@ -101,7 +85,6 @@ def load_split(root: str | Path, split: str, cache_dir: str | Path | None = None
 
     cache_file = None
     if cache_dir is not None:
-        # Key the cache on the CSV contents so a changed dataset never reuses stale arrays.
         digest = hashlib.md5((root / csv_name).read_bytes()).hexdigest()[:10]
         cache_file = Path(cache_dir) / f"{split}-{digest}.npy"
         if cache_file.exists():
@@ -123,7 +106,6 @@ def load_split(root: str | Path, split: str, cache_dir: str | Path | None = None
 
 
 def stratified_split(labels: np.ndarray, val_size: int, seed: int) -> tuple[np.ndarray, np.ndarray]:
-    """Split indices into train/val with the same class balance in both."""
     if val_size <= 0:
         return np.arange(len(labels)), np.array([], dtype=np.int64)
     rng = np.random.default_rng(seed)
@@ -139,7 +121,6 @@ def stratified_split(labels: np.ndarray, val_size: int, seed: int) -> tuple[np.n
 
 
 def build_transforms(aug: AugmentConfig | None, train: bool) -> v2.Compose:
-    """Transforms operate on uint8 CHW tensors."""
     ops: list[v2.Transform] = []
     if train and aug is not None:
         if aug.crop_padding > 0:
@@ -200,7 +181,7 @@ def build_train_val_loaders(
 ) -> tuple[DataLoader, DataLoader | None]:
     split = load_split(cfg.data.root, "train", cfg.data.cache_dir)
     assert split.labels is not None
-    train_idx, val_idx = stratified_split(split.labels, cfg.data.val_size, cfg.train.seed)
+    train_idx, val_idx = stratified_split(split.labels, cfg.data.val_size, cfg.data.split_seed)
     log.info("Training images: %d | validation images: %d", len(train_idx), len(val_idx))
 
     train_ds = ArrayDataset(
@@ -217,10 +198,9 @@ def build_train_val_loaders(
 
 
 def build_val_split(cfg: Config) -> ArrayDataset:
-    """The exact validation subset a run held out (same seed and size)."""
     split = load_split(cfg.data.root, "train", cfg.data.cache_dir)
     assert split.labels is not None
-    _, val_idx = stratified_split(split.labels, cfg.data.val_size, cfg.train.seed)
+    _, val_idx = stratified_split(split.labels, cfg.data.val_size, cfg.data.split_seed)
     return ArrayDataset(split.images[val_idx], split.labels[val_idx], build_transforms(None, False))
 
 

@@ -1,9 +1,3 @@
-"""Generates ``project1.ipynb``. Edit cells here, then run ``python notebooks/build_notebook.py``.
-
-Keeping the notebook's source in a script makes it reviewable in diffs; the
-executed notebook (with outputs) is what gets committed for grading.
-"""
-
 from pathlib import Path
 
 import nbformat as nbf
@@ -12,11 +6,10 @@ md, code = nbf.v4.new_markdown_cell, nbf.v4.new_code_cell
 
 cells = [
     md(
-        "# Deep Learning Project 1: a ResNet under 5M parameters for CIFAR-10\n\n"
-        "This notebook reproduces our results end to end: the data, the final architecture and "
-        "its parameter count, training curves, validation accuracy, an ablation comparison, and "
-        "the Kaggle submission. Training itself runs through the same package code as the "
-        "command line (`cifar_resnet.train`), so the numbers here match `runs/`."
+        "# CIFAR-10 ResNet under 5M params\n\n"
+        "Data, model, parameter count, training curves, validation accuracy, ablations and the "
+        "Kaggle submission. Training uses the same code as the CLI (`cifar_resnet.train`), "
+        "so everything here matches `runs/`."
     ),
     md("## 1. Setup"),
     code(
@@ -30,7 +23,7 @@ cells = [
         "import torch\n\n"
         "ROOT = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()\n"
         "os.chdir(ROOT)\n"
-        "sys.path.insert(0, str(ROOT / 'src'))  # works with or without `pip install -e .`\n\n"
+        "sys.path.insert(0, str(ROOT / 'src'))\n\n"
         "from cifar_resnet.checkpoint import load_model\n"
         "from cifar_resnet.config import load_config\n"
         "from cifar_resnet.data import CLASSES, build_val_split, load_split\n"
@@ -38,9 +31,9 @@ cells = [
         "from cifar_resnet.models import build_model, count_parameters\n"
         "from cifar_resnet.params import layer_table\n"
         "from cifar_resnet.utils import get_device\n\n"
-        "CONFIG = 'configs/student.yaml'  # final architecture and recipe\n"
-        "FINAL_RUN = 'student_full'        # same recipe retrained on all 50k images\n"
-        "RUN_TRAINING = False            # True trains here; False loads results from runs/\n\n"
+        "CONFIG = 'configs/student_long.yaml'\n"
+        "FINAL_RUN = 'student_long_full'\n"
+        "RUN_TRAINING = False\n\n"
         "cfg = load_config(CONFIG)\n"
         "device = get_device()\n"
         "print(f'torch {torch.__version__} | device {device}')"
@@ -75,8 +68,8 @@ cells = [
     ),
     md(
         "## 4. Training\n\n"
-        "Set `RUN_TRAINING = True` to train here (a GPU is strongly recommended). Otherwise "
-        "this loads the run produced by `cifar-train --config configs/student.yaml`."
+        "Set `RUN_TRAINING = True` to train here (needs a GPU). Otherwise this loads the run "
+        "made by `cifar-train --config configs/student_long.yaml`."
     ),
     code(
         "if RUN_TRAINING:\n"
@@ -133,8 +126,8 @@ cells = [
     ),
     md(
         "## 8. Final model and Kaggle submission\n\n"
-        "The final model is the chosen config retrained on all 50,000 training images "
-        "(`scripts/hpc/pipeline.sh` or `bash scripts/run_final.sh configs/student.yaml`)."
+        "Same config retrained on all 50k training images (`data.val_size=0`), then predicted "
+        "with flip TTA."
     ),
     code(
         "from cifar_resnet.predict import predict\n\n"
@@ -145,8 +138,8 @@ cells = [
         "print(sub.label.map(dict(enumerate(CLASSES))).value_counts().sort_index())"
     ),
     code(
-        "KAGGLE_PUBLIC_ACC = None   # fill in from the leaderboard after submitting\n"
-        "KAGGLE_PRIVATE_ACC = None  # fill in after the competition closes\n\n"
+        "KAGGLE_PUBLIC_ACC = None\n"
+        "KAGGLE_PRIVATE_ACC = None\n\n"
         "print('=' * 60)\n"
         "print(f'Final model parameters : {count_parameters(final_model):,}')\n"
         "print(f'Validation accuracy    : {acc_tta:.4f} (held-out 5k, {cfg.run_name})')\n"

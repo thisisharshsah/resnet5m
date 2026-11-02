@@ -1,6 +1,3 @@
-"""Saving and restoring checkpoints. A checkpoint carries its own config, so a model
-can always be rebuilt from the file alone."""
-
 from __future__ import annotations
 
 from pathlib import Path
@@ -15,7 +12,6 @@ from cifar_resnet.rules import CHECKPOINT_ORIGIN
 
 
 def save_weights(path: str | Path, model: nn.Module, cfg: Config, **meta: Any) -> None:
-    """Small inference checkpoint: weights + config + metadata, stamped with its origin."""
     torch.save(
         {
             "model": model.state_dict(),
@@ -35,7 +31,6 @@ def read_checkpoint(path: str | Path) -> dict[str, Any]:
 def load_model(
     path: str | Path, device: torch.device | str = "cpu", enforce_budget: bool = True
 ) -> tuple[nn.Module, Config, dict]:
-    """Rebuild the model stored in ``path`` and load its weights."""
     ckpt = read_checkpoint(path)
     cfg = from_dict(ckpt["config"])
     model = build_model(cfg.model, enforce_budget=enforce_budget)

@@ -1,5 +1,3 @@
-"""End-to-end: train a tiny model on fake data, then write a valid submission."""
-
 import json
 
 import pandas as pd

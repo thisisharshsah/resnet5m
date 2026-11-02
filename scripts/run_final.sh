@@ -1,9 +1,4 @@
 #!/bin/bash
-# Final model on a local GPU: retrain on all 50k training images (no validation hold-out)
-# with the chosen config, then write the Kaggle submission. On NYU HPC use
-# scripts/hpc/pipeline.sh instead.
-#
-#   bash scripts/run_final.sh configs/student.yaml
 set -euo pipefail
 cd "$(dirname "$0")/.."
 CONFIG="${1:-configs/student.yaml}"

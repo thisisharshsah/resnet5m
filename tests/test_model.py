@@ -36,5 +36,5 @@ def test_configurable_kernels_and_pool():
     model = build_model(cfg).eval()
     with torch.no_grad():
         assert model(torch.randn(1, 3, 32, 32)).shape == (1, 10)
-    # 16x16 feature map pooled by 4 -> 4x4 x 32 channels feeds the classifier.
+
     assert model.fc.in_features == 4 * 4 * 32

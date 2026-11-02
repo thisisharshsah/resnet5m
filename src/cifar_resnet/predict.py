@@ -1,14 +1,3 @@
-"""Predict the Kaggle test set and write ``submission.csv``.
-
-Usage::
-
-    cifar-predict --checkpoint runs/student_full/best.pt --output submissions/student_full.csv
-
-Only a single model from our own training, within the 5M-parameter limit, is accepted
-(see ``rules.py``). Inference runs in eval mode: test images never update any weights or
-BatchNorm statistics.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -28,7 +17,6 @@ log = logging.getLogger(__name__)
 
 
 def write_submission(ids, labels, path: str | Path, data_root: str | Path | None = None) -> Path:
-    """Write ``id,label`` rows and check them against sample_submission.csv if present."""
     sub = pd.DataFrame({"id": ids, "label": labels}).sort_values("id").reset_index(drop=True)
     if not sub["label"].between(0, 9).all():
         raise ValueError("labels must be integers in [0, 9]")

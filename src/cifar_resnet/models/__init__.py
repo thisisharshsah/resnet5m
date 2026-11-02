@@ -1,13 +1,12 @@
-"""Model factory and parameter accounting."""
-
 from __future__ import annotations
 
 from torch import nn
 
 from cifar_resnet.config import ModelConfig
+from cifar_resnet.models.ensemble import LogitEnsemble
 from cifar_resnet.models.resnet import BasicBlock, ResNet
 
-__all__ = ["BasicBlock", "ResNet", "build_model", "count_parameters"]
+__all__ = ["BasicBlock", "LogitEnsemble", "ResNet", "build_model", "count_parameters"]
 
 
 def count_parameters(model: nn.Module, trainable_only: bool = True) -> int:
@@ -15,7 +14,6 @@ def count_parameters(model: nn.Module, trainable_only: bool = True) -> int:
 
 
 def build_model(cfg: ModelConfig, enforce_budget: bool = True) -> ResNet:
-    """Build a ResNet from config and enforce the trainable-parameter budget."""
     model = ResNet(
         channels=cfg.channels,
         blocks=cfg.blocks,

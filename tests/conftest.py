@@ -1,5 +1,3 @@
-"""Shared fixtures: a tiny fake dataset in the exact Kaggle layout."""
-
 from __future__ import annotations
 
 from pathlib import Path

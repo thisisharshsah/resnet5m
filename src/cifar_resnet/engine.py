@@ -1,5 +1,3 @@
-"""Training and evaluation loops, optimizer and scheduler construction."""
-
 from __future__ import annotations
 
 import math
@@ -16,11 +14,8 @@ from cifar_resnet.ema import ModelEMA
 from cifar_resnet.sam import SAM, frozen_bn_stats
 from cifar_resnet.utils import autocast_context
 
-# ----------------------------------------------------------------------------- optimizer
-
 
 def build_optimizer(model: nn.Module, cfg: OptimConfig) -> torch.optim.Optimizer:
-    """No weight decay on BatchNorm parameters and biases (standard practice)."""
     decay, no_decay = [], []
     for p in model.parameters():
         if p.requires_grad:
@@ -40,7 +35,6 @@ def build_optimizer(model: nn.Module, cfg: OptimConfig) -> torch.optim.Optimizer
 def build_scheduler(
     optimizer: torch.optim.Optimizer, cfg: OptimConfig, steps_per_epoch: int, epochs: int
 ) -> torch.optim.lr_scheduler.LRScheduler:
-    """Per-step schedule: linear warmup, then cosine decay (or one-cycle / constant)."""
     total = max(1, steps_per_epoch * epochs)
     warmup = int(cfg.warmup_epochs * steps_per_epoch)
     kind = cfg.scheduler.lower()
@@ -64,13 +58,9 @@ def build_scheduler(
     return torch.optim.lr_scheduler.LambdaLR(optimizer, factor)
 
 
-# ----------------------------------------------------------------------------- mixing
-
-
 def mix_batch(
     x: torch.Tensor, y: torch.Tensor, aug: AugmentConfig
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
-    """MixUp (Zhang et al., 2018) or CutMix (Yun et al., 2019) on a fraction of batches."""
     mode = aug.mix.lower()
     if mode == "none" or np.random.rand() >= aug.mix_prob:
         return x, y, y, 1.0
@@ -93,13 +83,9 @@ def mix_batch(
 
 
 def distillation_loss(student: torch.Tensor, teacher: torch.Tensor, t: float) -> torch.Tensor:
-    """Hinton et al. (2015): KL between temperature-softened distributions, scaled by T^2."""
     return F.kl_div(
         F.log_softmax(student / t, dim=1), F.softmax(teacher / t, dim=1), reduction="batchmean"
     ) * (t * t)
-
-
-# ----------------------------------------------------------------------------- loops
 
 
 @dataclass
@@ -116,7 +102,6 @@ def _forward_loss(
     device: torch.device,
     amp: bool,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Cross-entropy on (possibly mixed) labels, blended with the distillation term."""
     x, y_a, y_b, lam, teacher_logits = batch
     with autocast_context(device, amp):
         out = model(x)
@@ -157,8 +142,6 @@ def train_one_epoch(
             x = x.contiguous(memory_format=torch.channels_last)
         x, y_a, y_b, lam = mix_batch(x, y, aug)
 
-        # The teacher sees exactly the student's (augmented, mixed) input: "consistent
-        # teaching" (Beyer et al., 2022).
         teacher_logits = None
         if teacher is not None and distill is not None:
             with torch.no_grad(), autocast_context(device, amp):
@@ -204,7 +187,6 @@ def predict_logits(
     amp: bool = True,
     channels_last: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return (logits, labels) on CPU. ``tta`` averages the image and its mirror."""
     model.eval()
     all_logits, all_labels = [], []
     for x, y in loader:

@@ -1,7 +1,11 @@
-# Shared settings for the NYU Torch scripts. Override any of these in your shell.
-# Paths follow NYU's "Apptainer with Conda" guide: Python lives in an ext3 overlay so the
-# many small conda files don't count against your file quota.
-export PROJECT_DIR="${PROJECT_DIR:-/scratch/$USER/cifar10-resnet}"
+export ACCOUNT="${ACCOUNT:-cs_gy_6923-2026fa}"
+export PROJECT_DIR="${PROJECT_DIR:-/scratch/$USER/resnet5m}"
 export OVERLAY="${OVERLAY:-/scratch/$USER/overlays/cifar-resnet.ext3}"
 export OVERLAY_TEMPLATE="${OVERLAY_TEMPLATE:-/share/apps/overlay-fs-ext3/overlay-15GB-500K.ext3.gz}"
-export SIF="${SIF:-/share/apps/images/cuda-13.3.1-ubuntu-26.04.sif}"
+if [[ -z "${SIF:-}" ]]; then
+  SIF="$(ls -1 /share/apps/images/cuda*ubuntu*.sif 2>/dev/null | sort -V | tail -1)"
+  export SIF
+fi
+export CONTAINER="${CONTAINER:-$(command -v apptainer || command -v singularity)}"
+if [[ "$(basename "${CONTAINER:-}")" == apptainer ]]; then RW_FLAGS="--fakeroot"; else RW_FLAGS=""; fi
+export RW_FLAGS
