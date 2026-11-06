@@ -15,6 +15,7 @@ Competition: https://www.kaggle.com/competitions/cifar-10-res-net-architecture-c
 | `student_v5` / `student_v5_full` (final) | 4,902,506 | 97.46% (97.48% flip TTA) | 0.899 | after Nov 6 |
 | `student_long` / `student_long_full` | 4,902,506 | 97.18% (97.20%) | 0.896 | |
 | `student` / `student_full` | 4,902,506 | 97.14% (97.12%) | 0.887 | |
+| `student_no_kd` (same as `student`, no teacher) | 4,902,506 | 96.86% (96.88%) | | |
 | `wide3` (baseline) | 4,337,370 | 96.10% (96.44%) | 0.875 | |
 
 Val accuracy comes from the run trained on 45k images, the Kaggle score from its twin retrained on

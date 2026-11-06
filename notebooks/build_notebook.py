@@ -126,7 +126,7 @@ cells = [
     ),
     md("## 7. Teachers, distillation and schedule length"),
     code(
-        "ladder = ['wide3', 'student', 'student_long', 'student_v5', 'teacher', 'teacher_s1', 'teacher_s2', 'teacher_s3', 'teacher_s4']\n"
+        "ladder = ['wide3', 'student_no_kd', 'student', 'student_long', 'student_v5', 'teacher', 'teacher_s1', 'teacher_s2', 'teacher_s3', 'teacher_s4']\n"
         "ladder = [r for r in ladder if r in runs.index]\n"
         "sub = runs.loc[ladder, ['params', 'epochs', 'best_val_acc', 'best_val_acc_tta']]\n"
         "fig, ax = plt.subplots(figsize=(9, 4))\n"
