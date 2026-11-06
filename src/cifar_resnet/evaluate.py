@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 
 import numpy as np
-import torch
 from torch.utils.data import DataLoader
 
 from cifar_resnet.checkpoint import load_model

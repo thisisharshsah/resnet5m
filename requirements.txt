@@ -1,4 +1,3 @@
-# Mirrors pyproject.toml for environments where `pip install -e .` is not convenient.
 torch>=2.2
 torchvision>=0.17
 numpy>=1.24

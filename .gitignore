@@ -1,11 +1,9 @@
-# Data and generated artifacts (data comes from Kaggle; never commit it)
 data/
 .cache/
-runs/*/*.pt
 logs/
+runs/*/*.pt
 submissions/*.logits.pt
 
-# Python
 __pycache__/
 *.egg-info/
 .venv/

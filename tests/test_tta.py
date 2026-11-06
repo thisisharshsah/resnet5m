@@ -4,7 +4,9 @@ import torch
 from cifar_resnet.engine import tta_views
 
 
-@pytest.mark.parametrize("mode, n_views", [("none", 1), (False, 1), ("flip", 2), (True, 2), ("shift", 10)])
+@pytest.mark.parametrize(
+    "mode, n_views", [("none", 1), (False, 1), ("flip", 2), (True, 2), ("shift", 10)]
+)
 def test_tta_view_counts_and_shapes(mode, n_views):
     x = torch.randn(4, 3, 32, 32)
     views = tta_views(x, mode)

@@ -45,7 +45,11 @@ def predict(
     n_params = check_submission_model(model)
     root = data_root or cfg.data.root
     log.info(
-        "Loaded %s (%s params, epoch %s), tta=%s", checkpoint, f"{n_params:,}", ckpt.get("epoch"), tta
+        "Loaded %s (%s params, epoch %s), tta=%s",
+        checkpoint,
+        f"{n_params:,}",
+        ckpt.get("epoch"),
+        tta,
     )
 
     loader, ids = build_test_loader(root, cfg.data.cache_dir, device=device)
