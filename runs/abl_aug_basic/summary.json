@@ -1,0 +1,11 @@
+{
+  "run_name": "abl_aug_basic",
+  "params": 4337370,
+  "epochs": 60,
+  "train_images": 45000,
+  "best_val_acc": 0.9455999732017517,
+  "best_source": "ema",
+  "train_time_min": 8.0,
+  "device": "cuda",
+  "best_val_acc_tta": 0.9449999928474426
+}

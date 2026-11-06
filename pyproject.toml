@@ -26,6 +26,7 @@ dev = ["pytest>=8.0", "ruff>=0.5"]
 [project.scripts]
 cifar-train = "cifar_resnet.train:main"
 cifar-predict = "cifar_resnet.predict:main"
+cifar-eval = "cifar_resnet.evaluate:main"
 cifar-params = "cifar_resnet.params:main"
 
 [tool.setuptools.packages.find]

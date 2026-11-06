@@ -178,12 +178,31 @@ def train_one_epoch(
     return EpochStats(loss=total_loss / max(1, seen), acc=correct / max(1, seen))
 
 
+TTA_MODES = ("none", "flip", "shift")
+
+
+def tta_views(x: torch.Tensor, tta: bool | str) -> list[torch.Tensor]:
+    mode = {True: "flip", False: "none"}.get(tta, tta)
+    if mode not in TTA_MODES:
+        raise ValueError(f"tta must be one of {TTA_MODES}, got {tta!r}")
+    if mode == "none":
+        return [x]
+    views = [x, torch.flip(x, dims=[3])]
+    if mode == "shift":
+        size = x.shape[-1]
+        padded = F.pad(x, (2, 2, 2, 2), mode="reflect")
+        for dy, dx in ((2, 0), (-2, 0), (0, 2), (0, -2)):
+            crop = padded[:, :, 2 + dy : 2 + dy + size, 2 + dx : 2 + dx + size]
+            views += [crop, torch.flip(crop, dims=[3])]
+    return views
+
+
 @torch.no_grad()
 def predict_logits(
     model: nn.Module,
     loader: DataLoader,
     device: torch.device,
-    tta: bool = False,
+    tta: bool | str = False,
     amp: bool = True,
     channels_last: bool = False,
 ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -194,9 +213,7 @@ def predict_logits(
         if channels_last:
             x = x.contiguous(memory_format=torch.channels_last)
         with autocast_context(device, amp):
-            logits = model(x).float()
-            if tta:
-                logits = 0.5 * (logits + model(torch.flip(x, dims=[3])).float())
+            logits = torch.stack([model(v).float() for v in tta_views(x, tta)]).mean(0)
         all_logits.append(logits.cpu())
         all_labels.append(y)
     return torch.cat(all_logits), torch.cat(all_labels)
@@ -206,7 +223,7 @@ def evaluate(
     model: nn.Module,
     loader: DataLoader,
     device: torch.device,
-    tta: bool = False,
+    tta: bool | str = False,
     amp: bool = True,
     channels_last: bool = False,
 ) -> EpochStats:

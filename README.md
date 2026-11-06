@@ -12,7 +12,13 @@ Competition: https://www.kaggle.com/competitions/cifar-10-res-net-architecture-c
 
 | Run | Params | Val acc (5k held out) | Kaggle public | Kaggle private |
 |---|---|---|---|---|
-| training in progress | | | | |
+| `student_v5` / `student_v5_full` (final) | 4,902,506 | 97.46% (97.48% flip TTA) | 0.899 | after Nov 6 |
+| `student_long` / `student_long_full` | 4,902,506 | 97.18% (97.20%) | 0.896 | |
+| `student` / `student_full` | 4,902,506 | 97.14% (97.12%) | 0.887 | |
+| `wide3` (baseline) | 4,337,370 | 96.10% (96.44%) | 0.875 | |
+
+Val accuracy comes from the run trained on 45k images, the Kaggle score from its twin retrained on
+all 50k images. Teachers (36.7M params) reach 97.16% to 97.74% and are never submitted.
 
 The notebook `notebooks/project1.ipynb` prints the final accuracy and parameter count.
 
@@ -28,7 +34,8 @@ in YAML.
 
 | Config | Role | Stages | Params |
 |---|---|---|---|
-| `student_long.yaml` | final model | 96x2, 192x2, 320x2 | 4,902,506 |
+| `student_v5.yaml` | final model, 5 teachers, 1600 epochs | 96x2, 192x2, 320x2 | 4,902,506 |
+| `student_long.yaml` | 3 teachers, 800 epochs | 96x2, 192x2, 320x2 | 4,902,506 |
 | `student.yaml` | same model, shorter schedule | 96x2, 192x2, 320x2 | 4,902,506 |
 | `wide3.yaml` | baseline | 80x2, 160x2, 320x2 | 4,337,370 |
 | `resnet18_narrow.yaml` | ablation | 42x2, 84x2, 168x2, 336x2 | 4,815,940 |
@@ -40,9 +47,10 @@ decay 5e-4, random crop, flip, AutoAugment, random erasing, EMA weights, flip TT
 time. The final model adds:
 
 - SAM (rho 0.05), flatter minima tend to survive the test set shift better
-- knowledge distillation from three big teachers trained from scratch on the same split,
-  logits averaged, alpha 0.9, T 4. The student is still one model under 5M.
-- CutMix on half the batches, 800 epochs
+- knowledge distillation from five big teachers trained from scratch on the same split
+  (three for 200 epochs, two for 400), logits averaged, alpha 0.9, T 4. The student is still
+  one model under 5M.
+- CutMix on half the batches, 1600 epochs
 
 Model selection uses a 5,000 image validation split taken from the training set. The chosen
 config is then retrained on all 50,000 images for the submission. The public leaderboard is
@@ -113,10 +121,13 @@ cifar-train --config configs/wide3.yaml
 cifar-train --config configs/teacher.yaml
 cifar-train --config configs/teacher.yaml train.seed=1 run_name=teacher_s1
 cifar-train --config configs/teacher.yaml train.seed=2 run_name=teacher_s2
-cifar-train --config configs/student_long.yaml
-cifar-train --config configs/student_long.yaml data.val_size=0 run_name=student_long_full
-cifar-predict --checkpoint runs/student_long_full/best.pt --output submissions/final.csv
-cifar-train --resume runs/student_long/last.pt
+cifar-train --config configs/teacher.yaml train.epochs=400 train.seed=3 run_name=teacher_s3
+cifar-train --config configs/teacher.yaml train.epochs=400 train.seed=4 augment.policy=trivialaugment run_name=teacher_s4
+cifar-train --config configs/student_v5.yaml
+cifar-train --config configs/student_v5.yaml data.val_size=0 run_name=student_v5_full
+cifar-eval --checkpoint runs/student_v5/best.pt
+cifar-predict --checkpoint runs/student_v5_full/best.pt --output submissions/final.csv
+cifar-train --resume runs/student_v5/last.pt
 ```
 
 Any config field can be overridden on the command line, for example `train.epochs=50` or
@@ -137,10 +148,14 @@ cd resnet5m
 sbatch scripts/hpc/setup_env.sh
 bash scripts/hpc/pipeline.sh
 bash scripts/hpc/round2.sh
+bash scripts/hpc/round3.sh
 squeue -u $USER
 ```
 
 Training runs on one A100 (`c12m85-a100-1`), setup and prediction on the CPU partition.
+`round3.sh` trains the final student and its validation twin side by side on a two GPU node
+(`c24m170-a100-2`, `train_pair.sbatch`) and queues several identical copies, so a node that fails
+to boot is retried automatically.
 Cloud instances get killed after 20 minutes of low GPU use, so jobs give all CPUs to the data
 pipeline and log GPU use to `logs/`. Jobs resume from their last epoch if requeued.
 

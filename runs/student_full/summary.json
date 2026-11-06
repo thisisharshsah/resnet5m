@@ -1,0 +1,10 @@
+{
+  "run_name": "student_full",
+  "params": 4902506,
+  "epochs": 300,
+  "train_images": 50000,
+  "best_val_acc": null,
+  "best_source": "ema",
+  "train_time_min": 66.5,
+  "device": "cuda"
+}
