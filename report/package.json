@@ -1,0 +1,12 @@
+{
+  "name": "resnet5m-report",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Builds the ResNet5M project report",
+  "scripts": {
+    "build": "node build_report.js"
+  },
+  "dependencies": {
+    "docx": "9.8.1"
+  }
+}

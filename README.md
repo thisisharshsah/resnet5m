@@ -7,20 +7,30 @@ NYU Tandon Deep Learning, Fall 2026, Project 1, Kaggle competition
 The final model has 4,902,506 parameters, reaches 97.46% on a 5,000 image validation split
 and 0.899 on the public leaderboard.
 
+By Harsh Kumar Sah (hs6259) and Maaz Imam (smi6079), Kaggle team `resnet`. The report is in
+[`report/report.pdf`](report/report.pdf).
+
 ## Results
 
-| Run | Params | Val acc (flip TTA) | Kaggle public | Kaggle private |
-|---|---|---|---|---|
-| `student_v5` / `student_v5_full` (final) | 4,902,506 | 97.46% (97.48%) | 0.899 | after Nov 6 |
-| `student_long` / `student_long_full` | 4,902,506 | 97.18% (97.20%) | 0.896 | |
-| `student` / `student_full` | 4,902,506 | 97.14% (97.12%) | 0.887 | |
-| `student_no_kd` (`student` without a teacher) | 4,902,506 | 96.86% (96.88%) | | |
-| `wide3` (baseline) | 4,337,370 | 96.10% (96.44%) | 0.875 | |
+| Run | Params | Val acc (flip TTA) | Kaggle public |
+|---|---|---|---|
+| `student_v5` / `student_v5_full` (final) | 4,902,506 | 97.46% (97.48%) | 0.899 |
+| `student_long` / `student_long_full` | 4,902,506 | 97.18% (97.20%) | 0.896 |
+| `student` / `student_full` | 4,902,506 | 97.14% (97.12%) | 0.887 |
+| `student_no_kd` (`student` without a teacher) | 4,902,506 | 96.86% (96.88%) | |
+| `wide3` (baseline) | 4,337,370 | 96.10% (96.44%) | 0.875 |
 
-Val accuracy comes from the run trained on 45k images, the Kaggle score from its twin
-retrained on all 50k. The teachers (36.7M params) reach 97.16% to 97.74% and are never
-submitted. `notebooks/project1.ipynb` rebuilds every table and plot from `runs/` and prints the
-final accuracy and parameter count, no GPU needed.
+Val accuracy comes from the run trained on 45k images. Each student's Kaggle score comes from
+its twin retrained on all 50k; `wide3` was submitted from its 45k run. The teachers (36.7M
+params) reach 97.16% to 97.74% and are never submitted. `notebooks/project1.ipynb` rebuilds
+every table and plot from `runs/` and prints the final accuracy and parameter count, no GPU
+needed.
+
+## Report
+
+[`report/report.pdf`](report/report.pdf) is the 8 page project report, with an editable Word
+version next to it. `make report` redraws its figures from `runs/` and rebuilds the document, see
+[`report/README.md`](report/README.md).
 
 ## Quick start
 
@@ -107,11 +117,9 @@ squeue -u $USER
 ```
 
 `reproduce.sh` takes one stage at a time too: `baselines`, `teachers`, `students` or `final`.
-Training runs on one A100 (`c12m85-a100-1`), setup, evaluation and prediction on the CPU
-partition. The final stage trains `student_v5` and `student_v5_full` side by side on a two GPU
-node (`train_pair.sbatch`) and queues several identical copies, so a node that fails to boot is
-retried. Cloud nodes are stopped after 20 minutes of low GPU use, so jobs give all CPUs to the
-data pipeline, log GPU use to `logs/` and resume from their last epoch when requeued.
+Training runs on one A100 per job (`c12m85-a100-1`), setup, evaluation and prediction on the
+CPU partition. The final stage trains `student_v5` and `student_v5_full` side by side on a two GPU
+node (`train_pair.sbatch`). Jobs resume from their last epoch if they are stopped.
 
 ## Rules
 
@@ -143,6 +151,7 @@ src/cifar_resnet/
 runs/<run_name>/     config.yaml, metrics.csv, summary.json, val_eval.json (checkpoints stay local)
 submissions/         the csv files sent to Kaggle
 notebooks/           project1.ipynb, built by build_notebook.py
+report/              the report (PDF and Word) and the scripts that rebuild it
 scripts/             local ablations and final retrain
 scripts/hpc/         NYU Cloud Bursting jobs, reproduce.sh is the entry point
 tests/
@@ -168,18 +177,22 @@ A checkpoint carries its config, so a model can be rebuilt from the `.pt` file a
 
 ## References
 
+- Krizhevsky, Learning Multiple Layers of Features from Tiny Images (CIFAR-10), 2009
 - He et al., Deep Residual Learning for Image Recognition, CVPR 2016
+- Ioffe and Szegedy, Batch Normalization, ICML 2015
 - Zagoruyko and Komodakis, Wide Residual Networks, BMVC 2016
 - Foret et al., Sharpness-Aware Minimization, ICLR 2021. SAM code adapted from https://github.com/davda54/sam (MIT)
 - Hinton, Vinyals and Dean, Distilling the Knowledge in a Neural Network, 2015
 - Beyer et al., Knowledge Distillation: A Good Teacher is Patient and Consistent, CVPR 2022
 - Muller, Kornblith and Hinton, When Does Label Smoothing Help?, NeurIPS 2019
-- Cubuk et al., AutoAugment, CVPR 2019
+- Cubuk et al., AutoAugment, CVPR 2019. Muller and Hutter, TrivialAugment, ICCV 2021
 - DeVries and Taylor, Cutout, 2017. Zhong et al., Random Erasing, AAAI 2020
 - Yun et al., CutMix, ICCV 2019. Zhang et al., mixup, ICLR 2018
 - Goyal et al., Accurate, Large Minibatch SGD, 2017
+- Loshchilov and Hutter, SGDR: Stochastic Gradient Descent with Warm Restarts, ICLR 2017
 - Recht et al., Do CIFAR-10 Classifiers Generalize to CIFAR-10?, 2018
 - kuangliu/pytorch-cifar, https://github.com/kuangliu/pytorch-cifar
+- Paszke et al., PyTorch: An Imperative Style, High-Performance Deep Learning Library, NeurIPS 2019
 
 Parts of this code were written with help from an AI assistant (Claude), which the course
 allows as long as it is acknowledged. All experiments were run and checked by us.

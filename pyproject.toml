@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "resnet5m"
-version = "0.1.0"
+version = "1.0.0"
 description = "ResNets under 5M parameters for CIFAR-10, NYU Deep Learning Project 1"
 readme = "README.md"
 requires-python = ">=3.10"

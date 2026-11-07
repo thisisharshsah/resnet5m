@@ -11,5 +11,6 @@ venv/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+report/node_modules/
 .DS_Store
 .sync/
